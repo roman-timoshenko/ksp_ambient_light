@@ -1,0 +1,15 @@
+{
+	"NAME":"KSP-IRC",
+	"URL":"https://raw.githubusercontent.com/timmersuk/ksp_irc/master/AmbientLightAdjustment/etc/AmbientLightAdjustment.version",
+	"DOWNLOAD":"https://github.com/timmersuk/AmbientLightAdjustment/releases",
+	"GITHUB":{
+         "USERNAME":"timmersuk",
+         "REPOSITORY":"ksp_irc",
+         "ALLOW_PRE_RELEASE":false,
+     },
+	"CHANGE_LOG_URL":"https://github.com/timmersuk/AmbientLightAdjustment/commits/master",
+	"VERSION":{"MAJOR":0,"MINOR":8,"PATCH":0,"BUILD":1},
+	"KSP_VERSION":{"MAJOR":0,"MINOR":90,"PATCH":0},
+	"KSP_VERSION_MIN":{"MAJOR":0,"MINOR":90,"PATCH":0},
+	"KSP_VERSION_MAX":{"MAJOR":0,"MINOR":90,"PATCH":0}
+}

@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -41,21 +41,19 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Toolbar">
-      <HintPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\GameData\000_Toolbar\Toolbar.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program\GameData\000_Toolbar\Toolbar.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\Programme\KSP_0_24_2_64_dev\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdjustmentDrawable.cs" />
     <Compile Include="AmbienceSetting.cs" />
     <Compile Include="AmbientLightAdjustment.cs" />
-    <Compile Include="CompatibilityChecker.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UpdateChecker.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CHANGES.txt" />
@@ -63,12 +61,32 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="etc\AmbientLightAdjustment.version" />
     <None Include="etc\contrast.tga" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>del $(TargetDir)\*.pdb $(TargetDir)\UnityEngine.dll $(TargetDir)\Toolbar.dll $(TargetDir)\Assembly-CSharp*.dll $(TargetDir)\Mono.*.dll $(TargetDir)\TDx*.dll
-xcopy /Y $(ProjectDir)etc\*.tga $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>DEL "$(TargetDir)Assembly-CSharp.dll" 
+DEL "$(TargetDir)$(ProjectName).pdb" 
+DEL "$(TargetDir)UnityEngine.dll" 
+
+xcopy /s /f /y $(ProjectDir)etc $(TargetDir)GameData\$(ProjectName)\
+
+
+dir
+copy /y $(ProjectDir)CHANGES.txt GameData\$(ProjectName)\
+copy /y $(ProjectDir)LICENSE.txt GameData\$(ProjectName)\
+copy /y $(TargetDir)$(ProjectName).dll GameData\$(ProjectName)\
+
+"C:\Program Files\7-Zip\7z" a -tzip $(ProjectName)-$(ConfigurationName).zip GameData
+copy $(ProjectName)-$(ConfigurationName).zip $(ProjectDir)
+
+IF EXIST "$(ProjectDir)..\..\Timmers_KSP\KSP_TEST" xcopy /s /f /y $(TargetDir)\GameData "$(ProjectDir)..\..\Timmers_KSP\KSP_TEST\GameData\"
+
+IF EXIST "$(ProjectDir)..\..\Timmers_KSP\KSP_TEST_STRIPPED" xcopy /s /f /y $(TargetDir)\GameData "$(ProjectDir)..\..\Timmers_KSP\KSP_TEST_STRIPPED\GameData\"
+
+IF EXIST "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program" xcopy /s /f /y $(TargetDir)GameData "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program\GameData\"
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

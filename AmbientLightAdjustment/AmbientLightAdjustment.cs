@@ -28,7 +28,7 @@ namespace AmbientLightAdjustment {
 	internal class AmbientLightAdjustment : MonoBehaviour {
 		internal static int VERSION = 2;
 
-		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/blizzy/AmbientLightAdjustment/settings.dat";
+		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/AmbientLightAdjustment/settings.dat";
 		private const int AUTO_HIDE_DELAY = 5;
 
 		private IButton button;
@@ -40,7 +40,7 @@ namespace AmbientLightAdjustment {
 		public void Start() {
 			if (isRelevantScene()) {
 				button = ToolbarManager.Instance.add("AmbientLightAdjustment", "adjustLevels");
-				button.TexturePath = "blizzy/AmbientLightAdjustment/contrast";
+				button.TexturePath = "AmbientLightAdjustment/contrast";
 				button.ToolTip = "Ambient Light Adjustment";
 				button.Visibility = new GameScenesVisibility(GameScenes.FLIGHT, GameScenes.TRACKSTATION);
 				button.OnClick += (e) => {
