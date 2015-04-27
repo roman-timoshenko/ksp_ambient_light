@@ -42,7 +42,7 @@ namespace AmbientLightAdjustment {
 				button = ToolbarManager.Instance.add("AmbientLightAdjustment", "adjustLevels");
 				button.TexturePath = "AmbientLightAdjustment/contrast";
 				button.ToolTip = "Ambient Light Adjustment";
-				button.Visibility = new GameScenesVisibility(GameScenes.FLIGHT, GameScenes.TRACKSTATION);
+				button.Visibility = new GameScenesVisibility(GameScenes.FLIGHT, GameScenes.TRACKSTATION, GameScenes.SPACECENTER);
 				button.OnClick += (e) => {
 					switch (e.MouseButton) {
 						case 1:
@@ -91,7 +91,9 @@ namespace AmbientLightAdjustment {
 		}
 
 		private bool isRelevantScene() {
-			return HighLogic.LoadedSceneIsFlight || (HighLogic.LoadedScene == GameScenes.TRACKSTATION);
+			return HighLogic.LoadedSceneIsFlight || 
+                   HighLogic.LoadedScene == GameScenes.TRACKSTATION ||
+                   HighLogic.LoadedScene == GameScenes.SPACECENTER;
 		}
 
 		private void toggleAdjustmentUI() {
