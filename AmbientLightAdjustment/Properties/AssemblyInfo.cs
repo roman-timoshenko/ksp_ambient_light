@@ -32,7 +32,7 @@ using System.Runtime.InteropServices;
 // Sie können alle Werte angeben oder die standardmäßigen Build- und Revisionsnummern 
 // übernehmen, indem Sie "*" eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.3.1.1")]
-[assembly: AssemblyFileVersion("1.3.1.1")]
+[assembly: AssemblyVersion("1.4.4.1")]
+[assembly: AssemblyFileVersion("1.4.4.1")]
 
 [assembly: KSPAssemblyDependency("Toolbar", 1, 0)]
