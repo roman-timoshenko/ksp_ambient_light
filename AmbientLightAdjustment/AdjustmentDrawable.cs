@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using Toolbar;
 
 namespace AmbientLightAdjustment {
 	internal class AdjustmentDrawable : IDrawable {
@@ -46,16 +45,43 @@ namespace AmbientLightAdjustment {
 			// nothing to do
 		}
 
-		public Vector2 Draw(Vector2 position) {
-			rect.x = position.x;
-			rect.y = position.y;
-			rect = GUILayout.Window(id, rect, (windowId) => drawContents(), (string) null, GUI.skin.box);
+        public Vector2 Draw(Vector2 position, bool allowDrag)
+        {
+            rect.x = position.x;
+            rect.y = position.y;
+
+            return Draw(allowDrag);
+        }
+
+        public Vector2 GetPosition()
+        {
+            return new Vector2(rect.x, rect.y);
+        }
+
+        public Vector2 Draw(Vector2 position) {
+            return Draw(position, false);
+        }
+
+        private Vector2 Draw(bool allowDrag)
+        {
+            rect = GUILayout.Window(id, rect, (windowId) => drawContents(allowDrag), (string) null, GUI.skin.box);
 			return new Vector2(rect.width, rect.height);
 		}
 
-		private void drawContents() {
-			Level = GUILayout.HorizontalSlider(Level, 0f, 1f, GUILayout.Width(200));
-		}
+		private void drawContents(bool allowDrag) {
+            if (allowDrag)
+            {
+                GUILayout.BeginHorizontal();
+            }
+            Level = GUILayout.HorizontalSlider(Level, 0f, 1f, GUILayout.Width(200));            
+
+            if (allowDrag)
+            {
+                GUILayout.Space(10);
+                GUILayout.EndHorizontal();
+                GUI.DragWindow();
+            }
+        }
 
 		private void fireLevelChanged() {
 			if (OnLevelChanged != null) {
