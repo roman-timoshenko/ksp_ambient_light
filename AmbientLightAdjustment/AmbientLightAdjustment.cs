@@ -26,12 +26,15 @@ using UnityEngine;
 namespace AmbientLightAdjustment {
     internal interface IToolbarButton
     {
+        void Save(ConfigNode node);
+        void Load(ConfigNode node);
+
         void Destroy();
 
         bool IsLevelUIVisible();
         void ShowLevelUI(Action levelChangedCallback, Action toggleSettingCallback, Action resetSettingsCallback);
         void HideLevelUI();
-        void OnGUI();
+        bool OnGUI();
 
         float getLevel();
         void setLevel(float value);
@@ -44,6 +47,15 @@ namespace AmbientLightAdjustment {
         internal BlizzyButton(IButton wrapped)
         {
             this.wrapped = wrapped;
+        }
+
+        public void Save(ConfigNode node)
+        {
+        }
+
+        public void Load(ConfigNode node)
+        {
+
         }
 
         public void Destroy()
@@ -69,9 +81,10 @@ namespace AmbientLightAdjustment {
             wrapped.Drawable = null;
         }
 
-        public void OnGUI()
+        public bool OnGUI()
         {
             // blizzy's toolbar itself handles this, which is nice
+            return false;
         }
 
         public float getLevel()
@@ -91,11 +104,45 @@ namespace AmbientLightAdjustment {
         private bool addedToAppLauncher = false;
         private ApplicationLauncherButton wrapped;
         private AdjustmentDrawable levelUI;
-        private Vector2 levelUIPosition = new Vector2();
+        private Vector2 levelUIPosition = new Vector2(200f, 10f);
 
         internal StockButton(Callback toggleAdjustmentUI)
         {
             this.toggleAdjustmentUI = toggleAdjustmentUI;
+        }
+
+        public void Save(ConfigNode node)
+        {
+            //Log.warn("Saving position to config node[" + node + "] position[" + levelUIPosition + "]");
+            node.overwrite("x", levelUIPosition.x.ToString());
+            node.overwrite("y", levelUIPosition.y.ToString());
+        }
+
+        public void Load(ConfigNode node)
+        {
+            //Log.warn("Loading position from config node [" + node + "]");
+
+            if (!node.HasValue("x"))
+            {
+                //Log.warn("Node has no 'x' attribute");
+            }
+            else
+            { 
+                string xString = node.GetValue("x");
+                levelUIPosition.x = float.Parse(xString);
+            }
+
+            if (!node.HasValue("y"))
+            {
+                //Log.warn("Node has no 'y' attribute");
+            }
+            else
+            {
+                string yString = node.GetValue("y");
+                levelUIPosition.y = float.Parse(yString);
+            }
+
+            //Log.warn("Position loaded x[" + levelUIPosition.x + "] y[" + levelUIPosition.y + "]");
         }
 
         public void Destroy()
@@ -120,7 +167,7 @@ namespace AmbientLightAdjustment {
             levelUI = null;
         }
 
-        public void OnGUI()
+        public bool OnGUI()
         {
             if (!addedToAppLauncher)
             {
@@ -145,8 +192,19 @@ namespace AmbientLightAdjustment {
             if (levelUI != null)
             {
                 levelUI.Draw(levelUIPosition, true);
+
+                Vector2 newPosition = levelUI.GetPosition();
+                if (newPosition == levelUIPosition)
+                {
+                    return false;
+                }
+
                 levelUIPosition = levelUI.GetPosition();
+
+                return true;
             }
+
+            return false;
         }
 
         public float getLevel()
@@ -201,7 +259,10 @@ namespace AmbientLightAdjustment {
         {
             if (button != null)
             {
-                button.OnGUI();
+                if (button.OnGUI())
+                {
+                    saveSettings();
+                }
             }
         }
 
@@ -246,6 +307,7 @@ namespace AmbientLightAdjustment {
 				button.Destroy();
 				button = null;
 			}
+            stopAutoHide();
 		}
 
 		private void loadSettings() {
@@ -259,6 +321,24 @@ namespace AmbientLightAdjustment {
 				if (settingNodes.Length >= 2) {
 					secondSetting = AmbienceSetting.create(settingNodes[1]);
 				}
+                if (button == null)
+                {
+                    //Log.warn("Unable to load position settings as button is null");
+                }
+                else
+                {
+                    if (!settings.HasNode("position"))
+                    {
+                        //Log.warn("Button is not null, but settings node[" + settings + "] has no position node");
+                    }
+                    else
+                    {
+                        ConfigNode positionNode = settings.GetNode("position");
+
+                        //Log.warn("Button is not null and settings has position node[" + positionNode + "]");
+                        button.Load(positionNode);
+                    }
+                }
 			}
 		}
 
@@ -267,6 +347,15 @@ namespace AmbientLightAdjustment {
 			ConfigNode ambienceNode = root.AddNode("ambience");
 			setting.save(ambienceNode.AddNode("setting"));
 			secondSetting.save(ambienceNode.AddNode("setting"));
+            if (button == null)
+            {
+                //Log.warn("Button is null, unable to save position");
+            }
+            else
+            {
+                //Log.warn("Button is not null, saving position");
+                button.Save(root.AddNode("position"));
+            }
 			root.Save(SETTINGS_FILE);
 		}
 
