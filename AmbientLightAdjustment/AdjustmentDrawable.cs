@@ -41,6 +41,15 @@ namespace AmbientLightAdjustment {
 		private int id = new System.Random().Next(int.MaxValue);
 		private Rect rect = new Rect(0, 0, 0, 0);
 
+        private Action toggleSettingCallback;
+        private Action resetSettingsCallback;
+
+        public AdjustmentDrawable(Action toggleSettingCallback, Action resetSettingsCallback)
+        {
+            this.toggleSettingCallback = toggleSettingCallback;
+            this.resetSettingsCallback = resetSettingsCallback;
+        }
+
 		public void Update() {
 			// nothing to do
 		}
@@ -69,16 +78,20 @@ namespace AmbientLightAdjustment {
 		}
 
 		private void drawContents(bool allowDrag) {
-            if (allowDrag)
+            GUILayout.BeginHorizontal();
+            Level = GUILayout.HorizontalSlider(Level, 0f, 1f, GUILayout.Width(200));
+            if (GUILayout.Button("T"))
             {
-                GUILayout.BeginHorizontal();
+                toggleSettingCallback();
             }
-            Level = GUILayout.HorizontalSlider(Level, 0f, 1f, GUILayout.Width(200));            
+            if (GUILayout.Button("R"))
+            {
+                resetSettingsCallback();
+            }
+            GUILayout.EndHorizontal();
 
             if (allowDrag)
             {
-                GUILayout.Space(10);
-                GUILayout.EndHorizontal();
                 GUI.DragWindow();
             }
         }

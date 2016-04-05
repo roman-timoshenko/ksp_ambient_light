@@ -29,9 +29,9 @@ namespace AmbientLightAdjustment {
         void Destroy();
 
         bool IsLevelUIVisible();
-        void ShowLevelUI(Action levelChangedCallback);
+        void ShowLevelUI(Action levelChangedCallback, Action toggleSettingCallback, Action resetSettingsCallback);
         void HideLevelUI();
-        void DrawLevelUI();
+        void OnGUI();
 
         float getLevel();
         void setLevel(float value);
@@ -56,9 +56,9 @@ namespace AmbientLightAdjustment {
             return (wrapped.Drawable != null);
         }
 
-        public void ShowLevelUI(Action levelChangedCallback)
+        public void ShowLevelUI(Action levelChangedCallback, Action toggleSettingCallback, Action resetSettingsCallback)
         {
-            AdjustmentDrawable adjustment = new AdjustmentDrawable();
+            AdjustmentDrawable adjustment = new AdjustmentDrawable(toggleSettingCallback, resetSettingsCallback);
             adjustment.OnLevelChanged += levelChangedCallback;
 
             wrapped.Drawable = adjustment;
@@ -69,7 +69,7 @@ namespace AmbientLightAdjustment {
             wrapped.Drawable = null;
         }
 
-        public void DrawLevelUI()
+        public void OnGUI()
         {
             // blizzy's toolbar itself handles this, which is nice
         }
@@ -87,13 +87,15 @@ namespace AmbientLightAdjustment {
 
     internal class StockButton : IToolbarButton
     {
+        private Callback toggleAdjustmentUI;
+        private bool addedToAppLauncher = false;
         private ApplicationLauncherButton wrapped;
         private AdjustmentDrawable levelUI;
         private Vector2 levelUIPosition = new Vector2();
 
-        internal StockButton(ApplicationLauncherButton wrapped)
+        internal StockButton(Callback toggleAdjustmentUI)
         {
-            this.wrapped = wrapped;
+            this.toggleAdjustmentUI = toggleAdjustmentUI;
         }
 
         public void Destroy()
@@ -107,9 +109,9 @@ namespace AmbientLightAdjustment {
             return (levelUI != null);
         }
 
-        public void ShowLevelUI(Action levelChangedCallback)
+        public void ShowLevelUI(Action levelChangedCallback, Action toggleSettingCallback, Action resetSettingsCallback)
         {
-            levelUI = new AdjustmentDrawable();
+            levelUI = new AdjustmentDrawable(toggleSettingCallback, resetSettingsCallback);
             levelUI.OnLevelChanged += levelChangedCallback;
         }
 
@@ -118,8 +120,27 @@ namespace AmbientLightAdjustment {
             levelUI = null;
         }
 
-        public void DrawLevelUI()
+        public void OnGUI()
         {
+            if (!addedToAppLauncher)
+            {
+                if (ApplicationLauncher.Ready)
+                {
+                    ApplicationLauncher.AppScenes scenes = ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.TRACKSTATION | ApplicationLauncher.AppScenes.SPACECENTER;
+
+                    Texture toolbarButtonTexture = (Texture)GameDatabase.Instance.GetTexture("AmbientLightAdjustment/contrast", false);
+                    wrapped = ApplicationLauncher.Instance.AddModApplication(toggleAdjustmentUI,          // Callback onTrue, 
+                                                                             toggleAdjustmentUI,          // Callback onFalse, 
+                                                                             null,                        // Callback onHover, 
+                                                                             null,                        // Callback onHoverOut, 
+                                                                             null,                        // Callback onEnable, 
+                                                                             null,                        // Callback onDisable, 
+                                                                             scenes,                      // AppScenes visibleInScenes, 
+                                                                             toolbarButtonTexture);       // Texture texture
+                    addedToAppLauncher = true;
+                }
+            }
+
             // stock applauncher does not handle this, which is a pity
             if (levelUI != null)
             {
@@ -139,9 +160,8 @@ namespace AmbientLightAdjustment {
         }
     }
 
-
-	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-	internal class AmbientLightAdjustment : MonoBehaviour {
+    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    internal class AmbientLightAdjustment : MonoBehaviour {
 		internal static int VERSION = 2;
 
 		private static readonly string SETTINGS_FILE = KSPUtil.ApplicationRootPath + "GameData/AmbientLightAdjustment/settings.dat";
@@ -151,10 +171,12 @@ namespace AmbientLightAdjustment {
 		private AmbienceSetting setting;
 		private AmbienceSetting secondSetting;
 		private Color defaultAmbience;
+        private bool defaultAmbienceRetrieved = false;
 		private bool listenToSliderChange = true;
 
 		public void Start() {
-			if (isRelevantScene()) {
+			if (button == null) {
+                //Log.warn("Awake - button == null");
                 if (ToolbarManager.ToolbarAvailable)
                 {
                     button = setupBlizzyToolbarButton();
@@ -166,15 +188,20 @@ namespace AmbientLightAdjustment {
 
 				loadSettings();
 			}
+            else
+            {
+                //Log.warn("Awake - button != null");
+            }
 		}
+        
 
         #region gui
 
         public void OnGUI()
         {
-            if (button != null && button.IsLevelUIVisible())
+            if (button != null)
             {
-                button.DrawLevelUI();
+                button.OnGUI();
             }
         }
 
@@ -207,23 +234,14 @@ namespace AmbientLightAdjustment {
 
         private IToolbarButton setupStockToolbarButton()
         {
-            ApplicationLauncher.AppScenes scenes = ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.TRACKSTATION | ApplicationLauncher.AppScenes.SPACECENTER;
-
-            Texture toolbarButtonTexture = (Texture)GameDatabase.Instance.GetTexture("AmbientLightAdjustment/contrast", false);
-            ApplicationLauncherButton button  = ApplicationLauncher.Instance.AddModApplication(toggleAdjustmentUI,          // Callback onTrue, 
-                                                                                               toggleAdjustmentUI,          // Callback onFalse, 
-                                                                                               null,                        // Callback onHover, 
-                                                                                               null,                        // Callback onHoverOut, 
-                                                                                               null,                        // Callback onEnable, 
-                                                                                               null,                        // Callback onDisable, 
-                                                                                               scenes,                      // AppScenes visibleInScenes, 
-                                                                                               toolbarButtonTexture);       // Texture texture
+            //Log.warn("setting up stock toolbar button");
             
-            return new StockButton(button);
+            return new StockButton(toggleAdjustmentUI);
         }
         
 
-        public void Destroy() {
+        public void OnDestroy() {
+            //Log.warn("Destroy called");
 			if (button != null) {
 				button.Destroy();
 				button = null;
@@ -267,35 +285,56 @@ namespace AmbientLightAdjustment {
 		}
 
 		private void showAdjustmentUI() {
-            Action callback = () => {
+            Action levelChangedCallback = () => {
                 if (listenToSliderChange)
                 {
-                    setting.Level = button.getLevel();
-                    setting.UseDefaultAmbience = false;
-                    saveSettings();
-                    startAutoHide();
+                    float newLevel = button.getLevel();
+                    if (newLevel != setting.Level)
+                    {
+                        setting.Level = button.getLevel();
+                        setting.UseDefaultAmbience = false; //Log.warn("Not using default ambience");
+                        saveSettings();
+                        startAutoHide("level changed");
+                    }
                 }
             };
 
-            button.ShowLevelUI(callback);
+            Action toggleSettingCallback = () =>
+            {
+                switchToSecondSetting();
+            };
+
+            Action resetSettingsCallback = () =>
+            {
+                resetToDefaultAmbience();
+            };
+
+            button.ShowLevelUI(levelChangedCallback, toggleSettingCallback, resetSettingsCallback);
 
             updateSliderFromSetting();
 
-            startAutoHide();
+            startAutoHide("showAdjustmentUI");
 		}
 
 		private void hideAdjustmentUI() {
 			stopAutoHide();
-			button.HideLevelUI();
+            if (button != null)
+            {
+                button.HideLevelUI();
+            }
 		}
 
-		private void startAutoHide() {
+		private void startAutoHide(string reason) {
+            //Log.warn("startAutoHide - " + reason);
+
 			stopAutoHide();
 			StartCoroutine("doAutoHide");
 		}
 
 		private void stopAutoHide() {
-			StopCoroutine("doAutoHide");
+            //Log.warn("stopAutoHide");
+
+            StopCoroutine("doAutoHide");
 		}
 
 		private IEnumerator doAutoHide() {
@@ -304,9 +343,11 @@ namespace AmbientLightAdjustment {
 		}
 
 		private void resetToDefaultAmbience() {
+            //Log.warn("resetToDefaultAmbience");
+
 			setting.Level = defaultAmbience.grayscale;
-			setting.UseDefaultAmbience = true;
-			updateSliderFromSetting();
+			setting.UseDefaultAmbience = true; //Log.warn("Using default ambience");
+            updateSliderFromSetting();
 			saveSettings();
 		}
 
@@ -328,7 +369,11 @@ namespace AmbientLightAdjustment {
 
 		public void LateUpdate() {
 			if (isRelevantScene()) {
-				defaultAmbience = RenderSettings.ambientLight;
+                if (!defaultAmbienceRetrieved)
+                {
+                    defaultAmbience = RenderSettings.ambientLight;
+                    defaultAmbienceRetrieved = true;
+                }
 
 				if (setting == null) {
 					setting = new AmbienceSetting() {
@@ -343,8 +388,15 @@ namespace AmbientLightAdjustment {
 					};
 				}
 
-				if (!setting.UseDefaultAmbience) {
-					Color ambience = defaultAmbience;
+                if (setting.UseDefaultAmbience)
+                {
+                    //Log.warn("Making use of default ambience");
+                    RenderSettings.ambientLight = defaultAmbience;
+                }
+                else
+                {
+                    //Log.warn("Overriding default ambience");
+                    Color ambience = defaultAmbience;
 					ambience.r = setting.Level;
 					ambience.g = setting.Level;
 					ambience.b = setting.Level;
