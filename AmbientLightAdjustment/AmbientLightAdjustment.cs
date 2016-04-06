@@ -148,7 +148,14 @@ namespace AmbientLightAdjustment {
         public void Destroy()
         {
             //ApplicationLauncher.Instance.DisableMutuallyExclusive(wrapped);
-            ApplicationLauncher.Instance.RemoveModApplication(wrapped);
+            if (wrapped != null)
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(wrapped);
+                wrapped = null;
+                addedToAppLauncher = false;
+            }
+
+            levelUI = null;
         }
 
         public bool IsLevelUIVisible()

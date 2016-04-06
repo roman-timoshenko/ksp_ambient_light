@@ -80,11 +80,11 @@ namespace AmbientLightAdjustment {
 		private void drawContents(bool allowDrag) {
             GUILayout.BeginHorizontal();
             Level = GUILayout.HorizontalSlider(Level, 0f, 1f, GUILayout.Width(200));
-            if (GUILayout.Button("T"))
+            if (GUILayout.Button(new GUIContent("T", "Toggle settings A/B")))
             {
                 toggleSettingCallback();
             }
-            if (GUILayout.Button("R"))
+            if (GUILayout.Button(new GUIContent("R", "Reset current setting to initial ambient")))
             {
                 resetSettingsCallback();
             }

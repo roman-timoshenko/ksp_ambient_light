@@ -37,15 +37,15 @@ namespace AmbientLightAdjustment {
 
 		internal static LogLevel Level = LogLevel.INFO;
 
-		internal static void trace(string message, params object[] @params) {
+        internal static void trace(string message, params object[] @params) {
 			log(LogLevel.TRACE, null, message, @params);
 		}
-		
-		internal static void debug(string message, params object[] @params) {
+
+        internal static void debug(string message, params object[] @params) {
 			log(LogLevel.DEBUG, null, message, @params);
 		}
 
-		internal static void info(string message, params object[] @params) {
+        internal static void info(string message, params object[] @params) {
 			log(LogLevel.INFO, null, message, @params);
 		}
 
